@@ -1,5 +1,6 @@
-import { ApolloServer } from '@apollo/server';
-import { HeaderMap } from '@apollo/server';
+import { apollo } from '@elysiajs/apollo';
+import { cors } from '@elysiajs/cors';
+import { Elysia } from 'elysia';
 import { createLogger, verifyToken } from '@movie-platform/shared';
 import type { RequestContext } from '@movie-platform/shared';
 import { schema } from './schema';
@@ -36,23 +37,6 @@ setInterval(() => {
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-in-production';
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': CORS_ORIGIN,
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-const server = new ApolloServer<RequestContext>({
-  schema,
-  introspection: process.env.NODE_ENV !== 'production',
-  formatError: (err) => {
-    logger.error({ code: err.extensions?.code, message: err.message }, 'graphql_error');
-    return err;
-  },
-});
-
-await server.start();
-
 async function buildContext(req: Request): Promise<RequestContext> {
   const requestId = crypto.randomUUID();
   const authHeader = req.headers.get('Authorization');
@@ -66,74 +50,59 @@ async function buildContext(req: Request): Promise<RequestContext> {
   return { requestId, logger };
 }
 
-const bunServer = Bun.serve({
-  port: PORT,
-  async fetch(req: Request) {
-    const url = new URL(req.url);
-
-    if (url.pathname === '/health/live') {
-      return new Response('ok', { status: 200 });
+const app = new Elysia()
+  .use(
+    cors({
+      origin: CORS_ORIGIN,
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    }),
+  )
+  .get('/health/live', 'ok')
+  .get('/health/ready', ({ set }) => {
+    const healthy = dbHealthCheck();
+    if (!healthy) {
+      set.status = 503;
+      return 'not ready';
     }
+    return 'ok';
+  })
+  .onBeforeHandle(({ request }) => {
+    const url = new URL(request.url);
+    if (url.pathname !== '/graphql' || request.method === 'OPTIONS') return;
 
-    if (url.pathname === '/health/ready') {
-      const healthy = dbHealthCheck();
-      return new Response(healthy ? 'ok' : 'not ready', { status: healthy ? 200 : 503 });
+    const ip = request.headers.get('X-Forwarded-For')?.split(',')[0].trim() ?? 'unknown';
+    if (!checkRateLimit(ip)) {
+      logger.warn({ ip }, 'rate_limit_exceeded');
+      return new Response(JSON.stringify({ errors: [{ message: 'Too many requests. Try again in a minute.' }] }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
-
+  })
+  .use(
+    apollo({
+      schema,
+      introspection: process.env.NODE_ENV !== 'production',
+      formatError: (err) => {
+        logger.error({ code: err.extensions?.code, message: err.message }, 'graphql_error');
+        return err;
+      },
+      context: async (ctx) => buildContext((ctx as { request: Request }).request),
+    }),
+  )
+  .onAfterResponse(({ request }) => {
+    const url = new URL(request.url);
     if (url.pathname === '/graphql') {
-      if (req.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: corsHeaders });
-      }
-
-      const ip = req.headers.get('X-Forwarded-For')?.split(',')[0].trim() ?? 'unknown';
-      if (!checkRateLimit(ip)) {
-        logger.warn({ ip }, 'rate_limit_exceeded');
-        return new Response(JSON.stringify({ errors: [{ message: 'Too many requests. Try again in a minute.' }] }), {
-          status: 429,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
-      }
-
-      try {
-        const body = await req.json();
-        const httpResponse = await server.executeHTTPGraphQLRequest({
-          httpGraphQLRequest: {
-            method: req.method,
-            headers: new HeaderMap(req.headers),
-            search: url.search,
-            body,
-          },
-          context: () => buildContext(req),
-        });
-
-        const responseBody = httpResponse.body.kind === 'complete'
-          ? httpResponse.body.string
-          : JSON.stringify({ errors: [{ message: 'Unexpected response body kind' }] });
-
-        logger.info({ method: req.method, path: url.pathname }, 'request');
-
-        return new Response(responseBody, {
-          status: httpResponse.status ?? 200,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
-      } catch (err) {
-        logger.error({ err }, 'request_error');
-        return new Response(JSON.stringify({ errors: [{ message: 'Internal server error' }] }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
-      }
+      logger.info({ method: request.method, path: url.pathname }, 'request');
     }
-
-    return new Response('Not Found', { status: 404 });
-  },
-});
+  })
+  .listen(PORT);
 
 logger.info({ port: PORT }, 'users service started');
 
-process.on('SIGTERM', async () => {
+process.on('SIGTERM', () => {
   logger.info({}, 'shutting down');
-  await server.stop();
-  bunServer.stop();
+  app.stop();
   process.exit(0);
 });

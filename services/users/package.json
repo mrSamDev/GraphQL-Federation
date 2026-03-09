@@ -8,7 +8,10 @@
   "dependencies": {
     "@apollo/server": "^4.11.0",
     "@apollo/subgraph": "^2.9.0",
+    "@elysiajs/apollo": "^1.4.0",
+    "@elysiajs/cors": "^1.4.1",
     "@movie-platform/shared": "workspace:*",
+    "elysia": "^1.4.27",
     "bcryptjs": "^2.4.3",
     "graphql": "^16.9.0",
     "graphql-tag": "^2.12.6",

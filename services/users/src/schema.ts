@@ -100,4 +100,4 @@ const resolvers = {
   },
 };
 
-export const schema = buildSubgraphSchema({ typeDefs, resolvers });
+export const schema = buildSubgraphSchema([{ typeDefs, resolvers }]);

@@ -1,4 +1,4 @@
-import { Database } from 'bun:sqlite';
+import { Database, type SQLQueryBindings } from 'bun:sqlite';
 
 const dbPath = (process.env.DATABASE_URL ?? 'file:/data/search.db').replace('file:', '');
 
@@ -130,7 +130,7 @@ export function searchWithFts(
   page: number,
   pageSize: number
 ): { results: MovieSearchResult[]; total: number } {
-  const params: unknown[] = [query];
+  const params: SQLQueryBindings[] = [query];
   const filterClauses: string[] = [];
 
   if (filters.genres?.length) {
@@ -174,10 +174,10 @@ export function searchWithFts(
   `;
 
   try {
-    const countRow = db.prepare<{ count: number }, unknown[]>(`SELECT COUNT(*) as count ${baseSql}`).get(...params);
+    const countRow = db.prepare<{ count: number }, SQLQueryBindings[]>(`SELECT COUNT(*) as count ${baseSql}`).get(...params);
     const total = countRow?.count ?? 0;
 
-    const rows = db.prepare<SearchRow, unknown[]>(
+    const rows = db.prepare<SearchRow, SQLQueryBindings[]>(
       `SELECT m.* ${baseSql} ORDER BY ${orderBy} LIMIT ? OFFSET ?`
     ).all(...params, pageSize, (page - 1) * pageSize);
 
@@ -201,7 +201,7 @@ export function searchWithLike(
   page: number,
   pageSize: number
 ): { results: MovieSearchResult[]; total: number } {
-  const params: unknown[] = [];
+  const params: SQLQueryBindings[] = [];
   const whereClauses: string[] = [];
 
   if (query) {
@@ -241,12 +241,12 @@ export function searchWithLike(
   const orderBy = orderMap[sort] ?? 'review_count DESC';
   const whereStr = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-  const countRow = db.prepare<{ count: number }, unknown[]>(
+  const countRow = db.prepare<{ count: number }, SQLQueryBindings[]>(
     `SELECT COUNT(*) as count FROM movie_search_index ${whereStr}`
   ).get(...params);
   const total = countRow?.count ?? 0;
 
-  const rows = db.prepare<SearchRow, unknown[]>(
+  const rows = db.prepare<SearchRow, SQLQueryBindings[]>(
     `SELECT * FROM movie_search_index ${whereStr} ORDER BY ${orderBy} LIMIT ? OFFSET ?`
   ).all(...params, pageSize, (page - 1) * pageSize);
 

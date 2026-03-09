@@ -1,0 +1,59 @@
+version: "3"
+
+tasks:
+  compose:
+    desc: Regenerate supergraph schema (run before build)
+    cmds:
+      - bash compose-supergraph.sh
+
+  build:
+    desc: Compose supergraph and build all Docker images
+    cmds:
+      - task: compose
+      - docker compose build
+
+  up:
+    desc: Start all services (builds first)
+    cmds:
+      - task: build
+      - docker compose up
+
+  up:detach:
+    desc: Start all services in the background
+    cmds:
+      - task: build
+      - docker compose up -d
+
+  down:
+    desc: Stop and remove containers
+    cmds:
+      - docker compose down
+
+  delete:
+    desc: Stop containers and remove images, volumes, and orphans
+    cmds:
+      - docker compose down --rmi all --volumes --remove-orphans
+
+  restart:
+    desc: Full teardown and fresh start
+    cmds:
+      - task: delete
+      - task: up
+
+  logs:
+    desc: Tail logs for all services (or pass SERVICE= for one)
+    cmds:
+      - docker compose logs -f {{.SERVICE}}
+
+  ps:
+    desc: Show running container status
+    cmds:
+      - docker compose ps
+
+  health:
+    desc: Check health endpoints for all subgraph services
+    cmds:
+      - curl -sf http://localhost:4001/health/live && echo "users ok"
+      - curl -sf http://localhost:4002/health/live && echo "movies ok"
+      - curl -sf http://localhost:4003/health/live && echo "reviews ok"
+      - curl -sf http://localhost:4004/health/live && echo "search ok"
