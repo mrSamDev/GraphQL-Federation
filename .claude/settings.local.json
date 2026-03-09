@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(agent-browser --help)",
+      "Bash(lsof -i :4000)",
+      "Bash(agent-browser open http://localhost:4000)",
+      "Bash(agent-browser screenshot /tmp/lab-01-initial.png)",
+      "Bash(agent-browser snapshot)",
+      "Bash(agent-browser fill e2 alice)",
+      "Bash(agent-browser fill e3 password1)",
+      "Bash(agent-browser click e4)",
+      "Bash(agent-browser screenshot /tmp/lab-02-after-login.png)",
+      "Bash(agent-browser click e23)",
+      "Bash(agent-browser screenshot /tmp/lab-09-hard-response.png)",
+      "Bash(agent-browser click e7)",
+      "Bash(agent-browser click e3)",
+      "Bash(agent-browser screenshot /tmp/lab-11-switch-account.png)",
+      "Bash(agent-browser fill e2 bob)",
+      "Bash(agent-browser fill e3 password2)",
+      "Bash(agent-browser click e9)",
+      "Bash(agent-browser click e15)",
+      "Bash(agent-browser screenshot /tmp/lab-15-bob-easy-direct.png)",
+      "Bash(agent-browser click e6)",
+      "Bash(agent-browser screenshot /tmp/lab-16-hard-direct.png)",
+      "Bash(agent-browser screenshot /tmp/lab-17-hard-role-confusion.png)",
+      "Bash(agent-browser click e17)",
+      "Bash(agent-browser get value e22)",
+      "Bash(agent-browser screenshot /tmp/lab-18-unicode-obfuscation.png)",
+      "Bash(agent-browser click e20)",
+      "Read(//Users/samdev/Desktop/apps/self/projects/security-labs/prompt-injection/**)",
+      "mcp__plugin_context-mode_context-mode__execute_file",
+      "Bash(agent-browser click @e5)",
+      "Bash(agent-browser click @e3)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/samdev/Desktop/apps/self/projects/security-labs/prompt-injection/.claude/hooks/block-env-files.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

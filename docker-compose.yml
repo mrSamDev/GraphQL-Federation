@@ -1,0 +1,137 @@
+version: "3.9"
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    container_name: movie-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      ROUTER_PORT: 4000
+      APOLLO_SUPERGRAPH_PATH: /app/supergraph.graphql
+      USERS_GRAPHQL_URL: http://users:4001/graphql
+      MOVIES_GRAPHQL_URL: http://movies:4002/graphql
+      REVIEWS_GRAPHQL_URL: http://reviews:4003/graphql
+      SEARCH_GRAPHQL_URL: http://search:4004/graphql
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-dev-public-key}
+      NODE_ENV: production
+    depends_on:
+      - users
+      - movies
+      - reviews
+      - search
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8088/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  users:
+    build:
+      context: .
+      dockerfile: services/users/Dockerfile
+    container_name: users-service
+    environment:
+      PORT: 4001
+      DATABASE_URL: file:/data/users.db
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - users_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4001/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  movies:
+    build:
+      context: .
+      dockerfile: services/movies/Dockerfile
+    container_name: movies-service
+    environment:
+      PORT: 4002
+      DATABASE_URL: file:/data/movies.db
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - movies_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4002/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  reviews:
+    build:
+      context: .
+      dockerfile: services/reviews/Dockerfile
+    container_name: reviews-service
+    environment:
+      PORT: 4003
+      DATABASE_URL: file:/data/reviews.db
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - reviews_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4003/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  search:
+    build:
+      context: .
+      dockerfile: services/search/Dockerfile
+    container_name: search-service
+    environment:
+      PORT: 4004
+      DATABASE_URL: file:/data/search.db
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      CORS_ORIGIN: http://localhost:5173
+      MOVIES_SERVICE_URL: http://movies:4002
+      REVIEWS_SERVICE_URL: http://reviews:4003
+    volumes:
+      - search_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4004/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: web-app
+    environment:
+      VITE_GRAPHQL_ENDPOINT: http://localhost:4000/graphql
+      NODE_ENV: production
+    ports:
+      - "5173:80"
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  users_data:
+  movies_data:
+  reviews_data:
+  search_data:

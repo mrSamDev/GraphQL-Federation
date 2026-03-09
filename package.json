@@ -1,0 +1,15 @@
+{
+  "name": "movie-platform",
+  "private": true,
+  "workspaces": ["packages/*", "services/*", "apps/*"],
+  "scripts": {
+    "compose": "bash compose-supergraph.sh",
+    "install:all": "bun install",
+    "build": "bash compose-supergraph.sh && docker compose build",
+    "down": "docker compose down",
+    "delete": "docker compose down --volumes --rmi all"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

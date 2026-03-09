@@ -1,0 +1,29 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key"])
+
+type User @key(fields: "id") {
+  id: ID!
+  username: String!
+  email: String!
+  role: String!
+  createdAt: String!
+}
+
+type AuthPayload {
+  token: String!
+  refreshToken: String!
+  user: User!
+}
+
+type Query {
+  me: User
+  userById(id: ID!): User
+}
+
+type Mutation {
+  register(username: String!, email: String!, password: String!): AuthPayload!
+  login(email: String!, password: String!): AuthPayload!
+  refreshToken(token: String!): AuthPayload!
+  logout(refreshToken: String!): Boolean!
+  promoteToAdmin(userId: ID!): User!
+}

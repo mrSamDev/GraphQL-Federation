@@ -1,0 +1,46 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key"])
+
+type MovieSearchResult {
+  movieId: ID!
+  title: String!
+  description: String
+  genres: [String!]!
+  releaseYear: Int
+  avgRating: Float
+  reviewCount: Int!
+}
+
+type SearchResult {
+  results: [MovieSearchResult!]!
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+input SearchFilters {
+  genres: [String!]
+  minRating: Float
+  maxRating: Float
+  releaseYearFrom: Int
+  releaseYearTo: Int
+}
+
+enum SearchSort {
+  RELEVANCE
+  RATING_DESC
+  RATING_ASC
+  NEWEST
+  OLDEST
+}
+
+type Query {
+  searchMovies(
+    query: String
+    filters: SearchFilters
+    sort: SearchSort
+    page: Int
+    pageSize: Int
+  ): SearchResult!
+  trendingMovies(limit: Int): [MovieSearchResult!]!
+}

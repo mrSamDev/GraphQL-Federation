@@ -1,0 +1,18 @@
+federation_version: =2.3.0
+subgraphs:
+  users:
+    routing_url: http://users:4001/graphql
+    schema:
+      file: ./services/users/src/schema.graphql
+  movies:
+    routing_url: http://movies:4002/graphql
+    schema:
+      file: ./services/movies/src/schema.graphql
+  reviews:
+    routing_url: http://reviews:4003/graphql
+    schema:
+      file: ./services/reviews/src/schema.graphql
+  search:
+    routing_url: http://search:4004/graphql
+    schema:
+      file: ./services/search/src/schema.graphql

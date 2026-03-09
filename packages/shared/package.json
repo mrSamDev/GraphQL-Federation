@@ -1,0 +1,9 @@
+{
+  "name": "@movie-platform/shared",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "graphql": "^16.9.0",
+    "jose": "^5.9.6"
+  }
+}

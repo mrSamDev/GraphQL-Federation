@@ -1,0 +1,16 @@
+{
+  "name": "@movie-platform/movies",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.11.0",
+    "@apollo/subgraph": "^2.9.0",
+    "@movie-platform/shared": "workspace:*",
+    "graphql": "^16.9.0",
+    "graphql-tag": "^2.12.6",
+    "zod": "^3.23.8"
+  }
+}

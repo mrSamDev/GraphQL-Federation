@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+apps/web/dist
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+logs/
+
+# Generated
+services/gateway/supergraph.graphql
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Bun
+bun.lockb
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+.dockerignore

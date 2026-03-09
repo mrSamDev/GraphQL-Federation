@@ -1,0 +1,27 @@
+supergraph:
+  listen: 0.0.0.0:${ROUTER_PORT:-4000}
+
+health_check:
+  listen: 0.0.0.0:8088
+  enabled: true
+
+include_subgraph_errors:
+  all: false
+
+cors:
+  origins:
+    - http://localhost:5173
+    - https://web.graphql.orb.local
+    - http://web.graphql.orb.local
+  allow_credentials: true
+
+headers:
+  all:
+    request:
+      - propagate:
+          named: Authorization
+
+telemetry:
+  instrumentation:
+    spans:
+      mode: spec_compliant
