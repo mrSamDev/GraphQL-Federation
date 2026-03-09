@@ -6,7 +6,7 @@ health_check:
   enabled: true
 
 include_subgraph_errors:
-  all: false
+  all: true
 
 cors:
   origins:

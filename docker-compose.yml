@@ -18,10 +18,14 @@ services:
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-dev-public-key}
       NODE_ENV: production
     depends_on:
-      - users
-      - movies
-      - reviews
-      - search
+      users:
+        condition: service_healthy
+      movies:
+        condition: service_healthy
+      reviews:
+        condition: service_healthy
+      search:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8088/health"]
       interval: 10s

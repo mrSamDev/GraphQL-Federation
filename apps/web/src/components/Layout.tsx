@@ -50,7 +50,13 @@ export function Layout() {
     navigate('/');
   }
 
-  const navLinks = [...NAV_LINKS, ...(isAuthenticated ? [{ to: '/movies/add', label: 'Add Movie' }] : [])];
+  const navLinks = [
+    ...NAV_LINKS,
+    ...(isAuthenticated ? [
+      { to: '/my-movies', label: 'My Movies' },
+      { to: '/movies/add', label: 'Add Movie' },
+    ] : []),
+  ];
 
   return (
     <div className="flex min-h-screen flex-col">

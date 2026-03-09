@@ -12,7 +12,9 @@ export function AddMoviePage() {
   const [description, setDescription] = useState('');
   const [releaseYear, setReleaseYear] = useState('');
   const [genresInput, setGenresInput] = useState('');
-  const [addMovie, { loading, error }] = useMutation(ADD_MOVIE_MUTATION);
+  const [addMovie, { loading, error }] = useMutation(ADD_MOVIE_MUTATION, {
+    refetchQueries: ['ListMovies'],
+  });
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 

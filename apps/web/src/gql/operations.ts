@@ -211,6 +211,24 @@ export const USER_PROFILE_QUERY = gql`
   }
 `;
 
+export const MOVIES_BY_USER_QUERY = gql`
+  query MoviesByUser($userId: ID!, $page: Int, $pageSize: Int) {
+    moviesByUser(userId: $userId, page: $page, pageSize: $pageSize) {
+      movies {
+        id
+        title
+        description
+        releaseYear
+        genres
+        createdAt
+      }
+      total
+      page
+      pageSize
+    }
+  }
+`;
+
 export const UPDATE_MOVIE_MUTATION = gql`
   mutation UpdateMovie($id: ID!, $input: UpdateMovieInput!) {
     updateMovie(id: $id, input: $input) {

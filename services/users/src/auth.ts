@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { createHash, randomBytes } from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-in-production';
-const ACCESS_TOKEN_EXPIRES_IN = '15m';
+const ACCESS_TOKEN_EXPIRES_IN = '24h';
 export const REFRESH_TOKEN_EXPIRES_DAYS = 30;
 
 export async function hashPassword(password: string): Promise<string> {

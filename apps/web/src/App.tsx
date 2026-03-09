@@ -8,6 +8,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ArchitecturePage } from './pages/ArchitecturePage';
 import { ProfilePage } from './pages/ProfilePage';
+import { MyMoviesPage } from './pages/MyMoviesPage';
 import { AuthContext, useAuthProvider } from './hooks/useAuth';
 
 const router = createBrowserRouter([
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       { path: 'register', element: <RegisterPage /> },
       { path: 'architecture', element: <ArchitecturePage /> },
       { path: 'users/:id', element: <ProfilePage /> },
+      { path: 'my-movies', element: <MyMoviesPage /> },
     ],
   },
 ]);
