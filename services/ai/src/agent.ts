@@ -44,10 +44,15 @@ export async function runAgent(
   const agent = createToolCallingAgent({ llm, tools, prompt });
   const executor = new AgentExecutor({ agent, tools, maxIterations: 5 });
 
-  const result = await executor.invoke({
-    input: userMessage,
-    chat_history: toChainHistory(history),
-  });
+  let result: Record<string, unknown>;
+  try {
+    result = await executor.invoke({
+      input: userMessage,
+      chat_history: toChainHistory(history),
+    });
+  } catch {
+    return 'Sorry, I ran into an issue processing your request. Could you try rephrasing?';
+  }
 
   return String(result.output);
 }

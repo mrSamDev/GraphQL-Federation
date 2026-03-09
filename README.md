@@ -1,6 +1,6 @@
 # MovieDB — GraphQL Federation Platform
 
-A full-stack movie discovery and review platform built on **Apollo Federation v2**. Four independent GraphQL subgraph services compose into a single unified API, served by an Apollo Router gateway.
+A full-stack movie discovery and review platform built on **Apollo Federation v2**. Independent GraphQL subgraph services compose into a single unified API, served by an Apollo Router gateway. Includes an AI movie assistant powered by Groq + LangChain.
 
 ---
 
@@ -25,22 +25,30 @@ A full-stack movie discovery and review platform built on **Apollo Federation v2
 └──┬───┘ └───┬────┘ └────┬────┘ └───┬────┘
    │         │           │          │
 [SQLite] [SQLite]    [SQLite]  [SQLite+FTS5]
+
+          ┌──────────────────────────┐
+          │      AI Subgraph  :4005  │
+          │    Groq · LangChain      │
+          └────────────┬─────────────┘
+                       │
+                  [SQLite] (chat history)
 ```
 
-Each subgraph is an independent Bun service with its own SQLite database. They share no code at runtime — only the federation protocol connects them.
+Each service is an independent Bun process with its own SQLite database. Subgraphs share no code at runtime — only the federation protocol connects them.
 
 ---
 
 ## Services
 
-| Service  | Port | Owns                          | Notes                          |
-|----------|------|-------------------------------|--------------------------------|
-| Users    | 4001 | `User`, `AuthPayload`         | JWT (HS256), bcryptjs          |
-| Movies   | 4002 | `Movie`, genres               | Full CRUD, paginated list      |
-| Reviews  | 4003 | `Review`, ratings             | Extends `Movie` with avgRating |
-| Search   | 4004 | `SearchResult`, trending      | SQLite FTS5, polls every 30s   |
-| Gateway  | 4000 | Supergraph (composed schema)  | Apollo Router binary           |
-| Frontend | 5173 | React SPA                     | nginx in Docker, Vite in dev   |
+| Service  | Port | Owns                          | Notes                                         |
+|----------|------|-------------------------------|-----------------------------------------------|
+| Users    | 4001 | `User`, `AuthPayload`         | JWT (HS256), bcryptjs                         |
+| Movies   | 4002 | `Movie`, genres               | Full CRUD, paginated list                     |
+| Reviews  | 4003 | `Review`, ratings             | Extends `Movie` with avgRating                |
+| Search   | 4004 | `SearchResult`, trending      | SQLite FTS5, polls every 30s                  |
+| AI       | 4005 | `Chat`, conversation history  | Groq llama-3.3-70b, LangChain tool-calling    |
+| Gateway  | 4000 | Supergraph (composed schema)  | Apollo Router binary                          |
+| Frontend | 5173 | React SPA                     | nginx in Docker, Vite in dev                  |
 
 ---
 
@@ -78,6 +86,7 @@ query {
 - [Bun](https://bun.sh) ≥ 1.0
 - [Docker + Docker Compose](https://docs.docker.com/compose/)
 - [Rover CLI](https://www.apollographql.com/docs/rover/) (`npm i -g @apollo/rover`)
+- [Groq API key](https://console.groq.com) — set as `GROQ_API_KEY` in `.env`
 
 ### Run locally
 
@@ -104,6 +113,7 @@ bun install
 # Start a specific service
 cd services/users && bun run dev   # :4001
 cd services/movies && bun run dev  # :4002
+cd services/ai && bun run dev      # :4005
 ```
 
 ---
@@ -115,16 +125,54 @@ graphql/
 ├── apps/
 │   └── web/                    # React + Vite frontend
 ├── services/
-│   ├── users/                  # Auth subgraph
-│   ├── movies/                 # Catalog subgraph
-│   ├── reviews/                # Reviews subgraph
-│   ├── search/                 # Search subgraph
+│   ├── users/                  # Auth subgraph (:4001)
+│   ├── movies/                 # Catalog subgraph (:4002)
+│   ├── reviews/                # Reviews subgraph (:4003)
+│   ├── search/                 # Search subgraph (:4004)
+│   ├── ai/                     # AI assistant service (:4005)
+│   │   └── src/
+│   │       ├── agent.ts        # LangChain agent + Groq LLM
+│   │       ├── tools.ts        # list_movies, get_movie_details, add_movie, add_review
+│   │       ├── schema.ts       # GraphQL schema (chat queries/mutations)
+│   │       └── db.ts           # SQLite conversation history
 │   └── gateway/                # Apollo Router config + supergraph
 ├── packages/
 │   └── shared/                 # Shared: logger, jwt, errors, types
 ├── supergraph.yaml             # rover compose config (file-based)
 ├── compose-supergraph.sh       # Run before docker compose build
 └── docker-compose.yml
+```
+
+---
+
+## AI Assistant
+
+The AI service (`services/ai`) is a **federation subgraph** (uses `buildSubgraphSchema`, registered in `supergraph.yaml`) that wraps a LangChain tool-calling agent. It is composed into the supergraph and accessible through the gateway at `:4000/graphql`.
+
+**How it works:**
+
+1. The frontend sends a `chat` mutation with the user's message and a conversation ID
+2. The agent loads prior messages from SQLite (conversation history per session)
+3. Groq (`llama-3.3-70b-versatile`) decides which tools to call
+4. Tools make HTTP calls to the movies and reviews services
+5. The final response is persisted and returned
+
+**Available tools:**
+
+| Tool               | What it does                                       |
+|--------------------|----------------------------------------------------|
+| `list_movies`      | Browse the catalog (supports genre/search filters) |
+| `get_movie_details`| Fetch a movie's full info and its reviews          |
+| `add_movie`        | Add a new movie (requires auth)                    |
+| `add_review`       | Submit a review for a movie (requires auth)        |
+
+**Env vars required:**
+
+```
+GROQ_API_KEY=...
+MOVIES_SERVICE_URL=http://movies:4002
+REVIEWS_SERVICE_URL=http://reviews:4003
+JWT_SECRET=...
 ```
 
 ---
