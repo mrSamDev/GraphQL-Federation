@@ -26,8 +26,10 @@ services:
         condition: service_healthy
       search:
         condition: service_healthy
+      ai:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8088/health"]
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/8088"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -120,6 +122,35 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  ai:
+    build:
+      context: .
+      dockerfile: services/ai/Dockerfile
+    container_name: ai-service
+    environment:
+      PORT: 4005
+      DATABASE_URL: file:/data/ai.db
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      CORS_ORIGIN: http://localhost:5173
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      MOVIES_SERVICE_URL: http://movies:4002
+      REVIEWS_SERVICE_URL: http://reviews:4003
+    volumes:
+      - ai_data:/data
+    depends_on:
+      movies:
+        condition: service_healthy
+      reviews:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4005/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
   web:
     build:
       context: .
@@ -139,3 +170,4 @@ volumes:
   movies_data:
   reviews_data:
   search_data:
+  ai_data:

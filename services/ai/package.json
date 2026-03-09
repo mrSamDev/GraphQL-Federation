@@ -1,0 +1,22 @@
+{
+  "name": "@movie-platform/ai",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.11.0",
+    "@apollo/subgraph": "^2.9.0",
+    "@elysiajs/apollo": "^1.4.0",
+    "@elysiajs/cors": "^1.4.1",
+    "@langchain/core": "^0.3.0",
+    "@langchain/groq": "^0.1.0",
+    "langchain": "^0.3.0",
+    "@movie-platform/shared": "workspace:*",
+    "elysia": "^1.4.27",
+    "graphql": "^16.9.0",
+    "graphql-tag": "^2.12.6",
+    "zod": "^3.23.8"
+  }
+}

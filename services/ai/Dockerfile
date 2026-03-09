@@ -20,5 +20,5 @@ COPY --from=deps /app/packages /app/packages
 COPY . .
 RUN mkdir -p /data && chown -R app:app /data /app
 USER app
-EXPOSE 4003
-CMD ["bun", "run", "services/reviews/src/index.ts"]
+EXPOSE 4005
+CMD ["bun", "run", "services/ai/src/index.ts"]

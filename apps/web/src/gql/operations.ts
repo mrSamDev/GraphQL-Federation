@@ -258,3 +258,45 @@ export const UPDATE_REVIEW_MUTATION = gql`
     }
   }
 `;
+
+export const SEND_MESSAGE_MUTATION = gql`
+  mutation SendMessage($input: SendMessageInput!) {
+    sendMessage(input: $input) {
+      conversation {
+        id
+        title
+      }
+      message {
+        id
+        role
+        content
+        createdAt
+      }
+    }
+  }
+`;
+
+export const CONVERSATION_QUERY = gql`
+  query GetConversation($id: ID!) {
+    conversation(id: $id) {
+      id
+      title
+      messages {
+        id
+        role
+        content
+        createdAt
+      }
+    }
+  }
+`;
+
+export const MY_CONVERSATIONS_QUERY = gql`
+  query MyConversations {
+    myConversations {
+      id
+      title
+      updatedAt
+    }
+  }
+`;

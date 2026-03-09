@@ -8,6 +8,7 @@ COPY services/movies/package.json services/movies/package.json
 COPY services/users/package.json services/users/package.json
 COPY services/reviews/package.json services/reviews/package.json
 COPY services/search/package.json services/search/package.json
+COPY services/ai/package.json services/ai/package.json
 COPY apps/web/package.json apps/web/package.json
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install
 
