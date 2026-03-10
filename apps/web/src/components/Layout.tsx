@@ -55,6 +55,7 @@ export function Layout() {
     ...(isAuthenticated ? [
       { to: '/my-movies', label: 'My Movies' },
       { to: '/movies/add', label: 'Add Movie' },
+      { to: '/chat', label: 'AI Chat' },
     ] : []),
   ];
 

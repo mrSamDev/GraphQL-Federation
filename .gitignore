@@ -21,8 +21,8 @@ out/
 *.log
 logs/
 
-# Generated
-services/gateway/supergraph.graphql
+
+
 
 # OS
 .DS_Store
