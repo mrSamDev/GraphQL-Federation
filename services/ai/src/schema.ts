@@ -10,6 +10,9 @@ import {
   addMessage,
   getMessages,
   touchConversation,
+  countUserMessagesInLastHour,
+  oldestUserMessageInLastHour,
+  deleteConversation as dbDeleteConversation,
 } from './db';
 import { runAgent } from './agent';
 
@@ -20,6 +23,16 @@ interface AiContext extends RequestContext {
 }
 
 const MAX_HISTORY = 20;
+const HOURLY_LIMIT = 20;
+
+function buildRateLimit(userId: string) {
+  const used = countUserMessagesInLastHour(userId);
+  const oldest = oldestUserMessageInLastHour(userId);
+  const resetsAt = oldest
+    ? new Date(new Date(oldest).getTime() + 60 * 60 * 1000).toISOString()
+    : new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  return { used, limit: HOURLY_LIMIT, resetsAt };
+}
 
 const resolvers = {
   Query: {
@@ -33,6 +46,10 @@ const resolvers = {
       if (!ctx.userId) throw unauthenticatedError();
       return listConversationsByUser(ctx.userId).map((c) => ({ ...c, messages: [] }));
     },
+    myRateLimit(_: unknown, __: unknown, ctx: AiContext) {
+      if (!ctx.userId) throw unauthenticatedError();
+      return buildRateLimit(ctx.userId);
+    },
   },
   Mutation: {
     async sendMessage(
@@ -41,6 +58,9 @@ const resolvers = {
       ctx: AiContext
     ) {
       if (!ctx.userId) throw unauthenticatedError();
+
+      const msgCount = countUserMessagesInLastHour(ctx.userId);
+      if (msgCount >= HOURLY_LIMIT) throw new Error('Rate limit exceeded: 20 messages per hour');
 
       let conversationId = input.conversationId ?? null;
 
@@ -67,7 +87,14 @@ const resolvers = {
       return {
         conversation: { ...conv, messages: getMessages(conversationId) },
         message: assistantMsg,
+        rateLimit: buildRateLimit(ctx.userId),
       };
+    },
+    deleteConversation(_: unknown, { id }: { id: string }, ctx: AiContext) {
+      if (!ctx.userId) throw unauthenticatedError();
+      const deleted = dbDeleteConversation(id, ctx.userId);
+      if (!deleted) throw notFoundError('Conversation');
+      return true;
     },
   },
   Conversation: {

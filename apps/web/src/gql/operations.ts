@@ -272,7 +272,28 @@ export const SEND_MESSAGE_MUTATION = gql`
         content
         createdAt
       }
+      rateLimit {
+        used
+        limit
+        resetsAt
+      }
     }
+  }
+`;
+
+export const MY_RATE_LIMIT_QUERY = gql`
+  query MyRateLimit {
+    myRateLimit {
+      used
+      limit
+      resetsAt
+    }
+  }
+`;
+
+export const DELETE_CONVERSATION_MUTATION = gql`
+  mutation DeleteConversation($id: ID!) {
+    deleteConversation(id: $id)
   }
 `;
 

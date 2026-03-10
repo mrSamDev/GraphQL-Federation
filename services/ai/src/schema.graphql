@@ -27,16 +27,25 @@ input SendMessageInput {
   content: String!
 }
 
+type RateLimitInfo {
+  used: Int!
+  limit: Int!
+  resetsAt: String!
+}
+
 type AgentResponse {
   conversation: Conversation!
   message: Message!
+  rateLimit: RateLimitInfo!
 }
 
 type Query {
   conversation(id: ID!): Conversation
   myConversations: [Conversation!]!
+  myRateLimit: RateLimitInfo!
 }
 
 type Mutation {
   sendMessage(input: SendMessageInput!): AgentResponse!
+  deleteConversation(id: ID!): Boolean!
 }

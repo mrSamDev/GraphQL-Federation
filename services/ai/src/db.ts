@@ -133,6 +133,39 @@ export function touchConversation(id: string): void {
   db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').run(new Date().toISOString(), id);
 }
 
+export function countUserMessagesInLastHour(userId: string): number {
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const row = db
+    .prepare<{ count: number }, [string, string]>(
+      `SELECT COUNT(*) as count FROM messages m
+       JOIN conversations c ON m.conversation_id = c.id
+       WHERE c.user_id = ? AND m.role = 'USER' AND m.created_at >= ?`
+    )
+    .get(userId, since);
+  return row?.count ?? 0;
+}
+
+export function oldestUserMessageInLastHour(userId: string): string | null {
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const row = db
+    .prepare<{ created_at: string }, [string, string]>(
+      `SELECT m.created_at FROM messages m
+       JOIN conversations c ON m.conversation_id = c.id
+       WHERE c.user_id = ? AND m.role = 'USER' AND m.created_at >= ?
+       ORDER BY m.created_at ASC LIMIT 1`
+    )
+    .get(userId, since);
+  return row?.created_at ?? null;
+}
+
+export function deleteConversation(id: string, userId: string): boolean {
+  const conv = selectConversationByUser.get(id, userId);
+  if (!conv) return false;
+  db.prepare('DELETE FROM messages WHERE conversation_id = ?').run(id);
+  db.prepare('DELETE FROM conversations WHERE id = ?').run(id);
+  return true;
+}
+
 export function dbHealthCheck(): boolean {
   try {
     db.prepare('SELECT 1').get();

@@ -6,8 +6,6 @@ services:
       context: .
       dockerfile: services/gateway/Dockerfile
     container_name: movie-gateway
-    ports:
-      - "4000:4000"
     environment:
       ROUTER_PORT: 4000
       APOLLO_SUPERGRAPH_PATH: /app/supergraph.graphql
@@ -35,6 +33,14 @@ services:
       retries: 10
       start_period: 15s
     restart: unless-stopped
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.movie-gateway.rule=Host(`api.movie.mrsamdev.xyz`)"
+      - "traefik.http.routers.movie-gateway.entrypoints=websecure"
+      - "traefik.http.routers.movie-gateway.tls.certresolver=letsencrypt"
+      - "traefik.http.services.movie-gateway.loadbalancer.server.port=4000"
 
   users:
     build:
@@ -45,8 +51,8 @@ services:
       PORT: 4001
       DATABASE_URL: file:/data/users.db
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
-      CORS_ORIGIN: http://localhost:5173
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: https://movie.mrsamdev.xyz
     volumes:
       - users_data:/data
     healthcheck:
@@ -56,6 +62,8 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - dokploy-network
 
   movies:
     build:
@@ -66,8 +74,8 @@ services:
       PORT: 4002
       DATABASE_URL: file:/data/movies.db
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
-      CORS_ORIGIN: http://localhost:5173
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: https://movie.mrsamdev.xyz
     volumes:
       - movies_data:/data
     healthcheck:
@@ -77,6 +85,8 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - dokploy-network
 
   reviews:
     build:
@@ -87,8 +97,8 @@ services:
       PORT: 4003
       DATABASE_URL: file:/data/reviews.db
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
-      CORS_ORIGIN: http://localhost:5173
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: https://movie.mrsamdev.xyz
     volumes:
       - reviews_data:/data
     healthcheck:
@@ -98,6 +108,8 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - dokploy-network
 
   search:
     build:
@@ -108,8 +120,8 @@ services:
       PORT: 4004
       DATABASE_URL: file:/data/search.db
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
-      CORS_ORIGIN: http://localhost:5173
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: https://movie.mrsamdev.xyz
       MOVIES_SERVICE_URL: http://movies:4002
       REVIEWS_SERVICE_URL: http://reviews:4003
     volumes:
@@ -121,6 +133,8 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - dokploy-network
 
   ai:
     build:
@@ -131,8 +145,8 @@ services:
       PORT: 4005
       DATABASE_URL: file:/data/ai.db
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
-      CORS_ORIGIN: http://localhost:5173
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: https://movie.mrsamdev.xyz
       GROQ_API_KEY: ${GROQ_API_KEY}
       MOVIES_SERVICE_URL: http://movies:4002
       REVIEWS_SERVICE_URL: http://reviews:4003
@@ -154,20 +168,29 @@ services:
       retries: 10
       start_period: 15s
     restart: unless-stopped
+    networks:
+      - dokploy-network
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        VITE_GRAPHQL_ENDPOINT: https://api.movie.mrsamdev.xyz/graphql
     container_name: web-app
     environment:
-      VITE_GRAPHQL_ENDPOINT: http://localhost:4000/graphql
       NODE_ENV: production
-    ports:
-      - "5173:80"
     depends_on:
       - gateway
     restart: unless-stopped
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.movie-web.rule=Host(`movie.mrsamdev.xyz`)"
+      - "traefik.http.routers.movie-web.entrypoints=websecure"
+      - "traefik.http.routers.movie-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.movie-web.loadbalancer.server.port=80"
 
 volumes:
   users_data:
@@ -175,3 +198,7 @@ volumes:
   reviews_data:
   search_data:
   ai_data:
+
+networks:
+  dokploy-network:
+    external: true

@@ -1,0 +1,266 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+{
+  query: Query
+  mutation: Mutation
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+input AddMovieInput
+  @join__type(graph: MOVIES)
+{
+  title: String!
+  description: String
+  releaseYear: Int
+  genres: [String!]!
+}
+
+input AddReviewInput
+  @join__type(graph: REVIEWS)
+{
+  movieId: ID!
+  comment: String!
+  rating: Int!
+}
+
+type AgentResponse
+  @join__type(graph: AI)
+{
+  conversation: Conversation!
+  message: Message!
+  rateLimit: RateLimitInfo!
+}
+
+type AuthPayload
+  @join__type(graph: USERS)
+{
+  token: String!
+  refreshToken: String!
+  user: User!
+}
+
+type Conversation
+  @join__type(graph: AI, key: "id")
+{
+  id: ID!
+  userId: ID!
+  title: String!
+  messages: [Message!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+scalar join__FieldSet
+
+enum join__Graph {
+  AI @join__graph(name: "ai", url: "http://ai:4005/graphql")
+  MOVIES @join__graph(name: "movies", url: "http://movies:4002/graphql")
+  REVIEWS @join__graph(name: "reviews", url: "http://reviews:4003/graphql")
+  SEARCH @join__graph(name: "search", url: "http://search:4004/graphql")
+  USERS @join__graph(name: "users", url: "http://users:4001/graphql")
+}
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+type Message
+  @join__type(graph: AI)
+{
+  id: ID!
+  role: MessageRole!
+  content: String!
+  createdAt: String!
+}
+
+enum MessageRole
+  @join__type(graph: AI)
+{
+  USER @join__enumValue(graph: AI)
+  ASSISTANT @join__enumValue(graph: AI)
+}
+
+type Movie
+  @join__type(graph: MOVIES, key: "id")
+  @join__type(graph: REVIEWS, key: "id", resolvable: false)
+{
+  id: ID!
+  title: String! @join__field(graph: MOVIES)
+  description: String @join__field(graph: MOVIES)
+  releaseYear: Int @join__field(graph: MOVIES)
+  genres: [String!]! @join__field(graph: MOVIES)
+  createdBy: User! @join__field(graph: MOVIES)
+  createdAt: String! @join__field(graph: MOVIES)
+  updatedAt: String! @join__field(graph: MOVIES)
+}
+
+type MovieList
+  @join__type(graph: MOVIES)
+{
+  movies: [Movie!]!
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+type MovieSearchResult
+  @join__type(graph: SEARCH)
+{
+  movieId: ID!
+  title: String!
+  description: String
+  genres: [String!]!
+  releaseYear: Int
+  avgRating: Float
+  reviewCount: Int!
+}
+
+type Mutation
+  @join__type(graph: AI)
+  @join__type(graph: MOVIES)
+  @join__type(graph: REVIEWS)
+  @join__type(graph: USERS)
+{
+  sendMessage(input: SendMessageInput!): AgentResponse! @join__field(graph: AI)
+  deleteConversation(id: ID!): Boolean! @join__field(graph: AI)
+  addMovie(input: AddMovieInput!): Movie! @join__field(graph: MOVIES)
+  updateMovie(id: ID!, input: UpdateMovieInput!): Movie! @join__field(graph: MOVIES)
+  deleteMovie(id: ID!): Boolean! @join__field(graph: MOVIES)
+  addReview(input: AddReviewInput!): Review! @join__field(graph: REVIEWS)
+  updateReview(id: ID!, input: UpdateReviewInput!): Review! @join__field(graph: REVIEWS)
+  deleteReview(id: ID!): Boolean! @join__field(graph: REVIEWS)
+  register(username: String!, email: String!, password: String!): AuthPayload! @join__field(graph: USERS)
+  login(email: String!, password: String!): AuthPayload! @join__field(graph: USERS)
+  refreshToken(token: String!): AuthPayload! @join__field(graph: USERS)
+  logout(refreshToken: String!): Boolean! @join__field(graph: USERS)
+  promoteToAdmin(userId: ID!): User! @join__field(graph: USERS)
+}
+
+type Query
+  @join__type(graph: AI)
+  @join__type(graph: MOVIES)
+  @join__type(graph: REVIEWS)
+  @join__type(graph: SEARCH)
+  @join__type(graph: USERS)
+{
+  conversation(id: ID!): Conversation @join__field(graph: AI)
+  myConversations: [Conversation!]! @join__field(graph: AI)
+  myRateLimit: RateLimitInfo! @join__field(graph: AI)
+  movieById(id: ID!): Movie @join__field(graph: MOVIES)
+  listMovies(page: Int, pageSize: Int): MovieList! @join__field(graph: MOVIES)
+  moviesByUser(userId: ID!, page: Int, pageSize: Int): MovieList! @join__field(graph: MOVIES)
+  reviewsByMovie(movieId: ID!): [Review!]! @join__field(graph: REVIEWS)
+  reviewsByUser(userId: ID!): [Review!]! @join__field(graph: REVIEWS)
+  searchMovies(query: String, filters: SearchFilters, sort: SearchSort, page: Int, pageSize: Int): SearchResult! @join__field(graph: SEARCH)
+  trendingMovies(limit: Int): [MovieSearchResult!]! @join__field(graph: SEARCH)
+  me: User @join__field(graph: USERS)
+  userById(id: ID!): User @join__field(graph: USERS)
+}
+
+type RateLimitInfo
+  @join__type(graph: AI)
+{
+  used: Int!
+  limit: Int!
+  resetsAt: String!
+}
+
+type Review
+  @join__type(graph: REVIEWS, key: "id")
+{
+  id: ID!
+  movie: Movie!
+  user: User!
+  comment: String!
+  rating: Int!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input SearchFilters
+  @join__type(graph: SEARCH)
+{
+  genres: [String!]
+  minRating: Float
+  maxRating: Float
+  releaseYearFrom: Int
+  releaseYearTo: Int
+}
+
+type SearchResult
+  @join__type(graph: SEARCH)
+{
+  results: [MovieSearchResult!]!
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+enum SearchSort
+  @join__type(graph: SEARCH)
+{
+  RELEVANCE @join__enumValue(graph: SEARCH)
+  RATING_DESC @join__enumValue(graph: SEARCH)
+  RATING_ASC @join__enumValue(graph: SEARCH)
+  NEWEST @join__enumValue(graph: SEARCH)
+  OLDEST @join__enumValue(graph: SEARCH)
+}
+
+input SendMessageInput
+  @join__type(graph: AI)
+{
+  conversationId: ID
+  content: String!
+}
+
+input UpdateMovieInput
+  @join__type(graph: MOVIES)
+{
+  title: String
+  description: String
+  releaseYear: Int
+  genres: [String!]
+}
+
+input UpdateReviewInput
+  @join__type(graph: REVIEWS)
+{
+  comment: String
+  rating: Int
+}
+
+type User
+  @join__type(graph: MOVIES, key: "id", resolvable: false)
+  @join__type(graph: REVIEWS, key: "id", resolvable: false)
+  @join__type(graph: USERS, key: "id")
+{
+  id: ID!
+  username: String! @join__field(graph: USERS)
+  email: String! @join__field(graph: USERS)
+  role: String! @join__field(graph: USERS)
+  createdAt: String! @join__field(graph: USERS)
+}

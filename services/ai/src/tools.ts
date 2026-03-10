@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 const MOVIES_URL = process.env.MOVIES_SERVICE_URL ?? 'http://movies:4002';
 const REVIEWS_URL = process.env.REVIEWS_SERVICE_URL ?? 'http://reviews:4003';
+const SEARCH_URL = process.env.SEARCH_SERVICE_URL ?? 'http://search:4004';
+const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://gateway:4000';
 
 async function gqlFetch(
   url: string,
@@ -46,9 +48,30 @@ export function buildTools(token?: string): DynamicStructuredTool[] {
     },
   });
 
+  const searchMovies = new DynamicStructuredTool({
+    name: 'search_movies',
+    description: 'Search movies by title or keyword. Returns movieId which can be passed to get_movie_details. Use this when you only have a title, not an ID.',
+    schema: z.object({
+      query: z.string().describe('Title or keyword to search for'),
+      limit: z.number().int().min(1).max(10).optional().describe('Max results, defaults to 5'),
+    }),
+    func: async ({ query, limit }) => {
+      const data = await gqlFetch(
+        SEARCH_URL,
+        `query($query: String, $pageSize: Int) {
+          searchMovies(query: $query, pageSize: $pageSize) {
+            results { movieId title genres releaseYear avgRating reviewCount }
+          }
+        }`,
+        { query, pageSize: limit ?? 5 }
+      );
+      return JSON.stringify((data as { searchMovies: unknown }).searchMovies);
+    },
+  });
+
   const getMovieDetails = new DynamicStructuredTool({
     name: 'get_movie_details',
-    description: 'Get full details and reviews for a specific movie by ID.',
+    description: 'Get full details and reviews for a specific movie by ID. Use search_movies first if you only have a title.',
     schema: z.object({
       movieId: z.string().describe('The movie ID'),
     }),
@@ -117,5 +140,19 @@ export function buildTools(token?: string): DynamicStructuredTool[] {
     },
   });
 
-  return [listMovies, getMovieDetails, addMovie, addReview];
+  const executeGraphQL = new DynamicStructuredTool({
+    name: 'execute_graphql',
+    description:
+      'Execute any GraphQL query against the API. Use this for operations not covered by the specialized tools above.',
+    schema: z.object({
+      query: z.string().describe('Valid GraphQL query or mutation string'),
+      variables: z.record(z.unknown()).optional().describe('Variables for the query'),
+    }),
+    func: async ({ query, variables }) => {
+      const data = await gqlFetch(GATEWAY_URL, query, variables ?? {}, token);
+      return JSON.stringify(data, null, 2);
+    },
+  });
+
+  return [listMovies, searchMovies, getMovieDetails, addMovie, addReview, executeGraphQL];
 }
