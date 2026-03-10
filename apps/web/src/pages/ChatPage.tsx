@@ -35,6 +35,7 @@ export function ChatPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [rateLimit, setRateLimit] = useState<RateLimit | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const { data: convData, refetch: refetchConversations } = useQuery(MY_CONVERSATIONS_QUERY, {
     skip: !isAuthenticated,
@@ -79,6 +80,7 @@ export function ChatPage() {
     if (id === conversationId) return;
     setMessages([]);
     setError(null);
+    setShowSidebar(false);
     loadConversation({ variables: { id } });
   }
 
@@ -122,54 +124,91 @@ export function ChatPage() {
 
   const conversations = convData?.myConversations ?? [];
 
-  return (
-    <div className="flex h-[calc(100vh-7.5rem)] gap-4">
-      <ConversationList
-        conversations={conversations}
-        activeId={conversationId}
-        onSelect={handleSelectConversation}
-        onNew={handleNewChat}
-        onDelete={handleDeleteConversation}
-      />
-
-      <div className="flex flex-1 flex-col">
-        <div className="mb-4 border-b-2 border-border pb-4">
-          <div className="flex items-start justify-between">
+  function chatHeader(showChatsButton: boolean) {
+    return (
+      <div className="mb-4 border-b-2 border-border pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex items-center gap-3">
+            {showChatsButton && (
+              <button
+                onClick={() => setShowSidebar(true)}
+                className="border-2 border-border bg-bg px-2 py-1 text-[13px] font-medium text-text-muted hover:text-text"
+              >
+                ☰ Chats
+              </button>
+            )}
             <div>
               <h1 className="text-xl font-extrabold tracking-tight text-text-bright">AI Movie Assistant</h1>
               <p className="mt-0.5 text-[13px] text-text-muted">Powered by Groq · llama3-70b</p>
             </div>
-            {rateLimit && (
-              <div className={`border-2 border-border px-2 py-1 text-[11px] font-bold tabular-nums ${
-                rateLimit.used >= rateLimit.limit
-                  ? 'bg-accent text-white'
-                  : rateLimit.used >= rateLimit.limit - 5
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-surface text-text-muted'
-              }`}>
-                {rateLimit.used} / {rateLimit.limit} msgs
-                <span className="ml-1 font-normal opacity-70">
-                  · resets {new Date(rateLimit.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            )}
           </div>
+          {rateLimit && (
+            <div className={`border-2 border-border px-2 py-1 text-[11px] font-bold tabular-nums ${
+              rateLimit.used >= rateLimit.limit
+                ? 'bg-accent text-white'
+                : rateLimit.used >= rateLimit.limit - 5
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-surface text-text-muted'
+            }`}>
+              {rateLimit.used} / {rateLimit.limit} msgs
+              <span className="ml-1 font-normal opacity-70">
+                · resets {new Date(rateLimit.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          )}
         </div>
+      </div>
+    );
+  }
 
+  function chatContent() {
+    return (
+      <>
         <ChatMessages messages={messages} isThinking={isThinking} />
-
         {error && (
           <div className="mb-3 border-2 border-border bg-surface px-3 py-2 text-[13px] font-medium text-accent">
             {error}
           </div>
         )}
+        <ChatInput value={input} onChange={setInput} onSubmit={handleSubmit} disabled={isThinking} />
+      </>
+    );
+  }
 
-        <ChatInput
-          value={input}
-          onChange={setInput}
-          onSubmit={handleSubmit}
-          disabled={isThinking}
+  return (
+    <div className="flex h-[calc(100vh-7.5rem)]">
+      {/* Mobile: one panel at a time */}
+      <div className="flex flex-1 flex-col sm:hidden">
+        {showSidebar ? (
+          <ConversationList
+            conversations={conversations}
+            activeId={conversationId}
+            onSelect={handleSelectConversation}
+            onNew={() => { handleNewChat(); setShowSidebar(false); }}
+            onDelete={handleDeleteConversation}
+            onClose={() => setShowSidebar(false)}
+          />
+        ) : (
+          <div className="flex flex-1 flex-col">
+            {chatHeader(true)}
+            {chatContent()}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: two columns */}
+      <div className="hidden flex-1 gap-4 sm:flex">
+        <ConversationList
+          conversations={conversations}
+          activeId={conversationId}
+          onSelect={handleSelectConversation}
+          onNew={handleNewChat}
+          onDelete={handleDeleteConversation}
         />
+        <div className="flex flex-1 flex-col">
+          {chatHeader(false)}
+          {chatContent()}
+        </div>
       </div>
     </div>
   );

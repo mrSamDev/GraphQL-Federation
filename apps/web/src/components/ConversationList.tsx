@@ -10,6 +10,7 @@ interface Props {
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
+  onClose?: () => void;
 }
 
 function relativeTime(iso: string): string {
@@ -22,12 +23,20 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export function ConversationList({ conversations, activeId, onSelect, onNew, onDelete }: Props) {
+export function ConversationList({ conversations, activeId, onSelect, onNew, onDelete, onClose }: Props) {
   return (
-    <div className="flex w-56 shrink-0 flex-col gap-2 border-r-2 border-border pr-3">
+    <div className="flex w-full shrink-0 flex-col gap-2 sm:w-56 sm:border-r-2 sm:border-border sm:pr-3">
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 border-2 border-border bg-bg px-3 py-2 text-[13px] font-medium text-text-muted hover:text-text"
+        >
+          ← Back
+        </button>
+      )}
       <button
         onClick={onNew}
-        className="border-2 border-border bg-primary px-3 py-2 text-[13px] font-bold text-white shadow-[3px_3px_0_#111827] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+        className="border-2 border-border bg-primary px-3 py-2 text-[13px] font-bold text-white shadow-[3px_3px_0_#111827] transition-transform active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
       >
         + New chat
       </button>

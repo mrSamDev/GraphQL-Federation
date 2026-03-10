@@ -5,6 +5,7 @@ const SERVICES = [
   { name: 'Movies', port: 4002, color: '#9aad9b', bg: '#263129', types: ['Movie', 'Genre'], desc: 'Catalog, CRUD' },
   { name: 'Reviews', port: 4003, color: '#b79b95', bg: '#312725', types: ['Review', 'Rating'], desc: 'Ratings, reviews' },
   { name: 'Search', port: 4004, color: '#a89fb6', bg: '#2d2a35', types: ['SearchResult'], desc: 'FTS5, trending' },
+  { name: 'AI', port: 4005, color: '#c4a76b', bg: '#312e20', types: ['Conversation', 'Message'], desc: 'LangChain, Groq' },
 ];
 
 function ServiceNode({ name, port, color, bg, types, desc, active, onHover }: {
