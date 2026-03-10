@@ -1,5 +1,6 @@
 supergraph:
   listen: 0.0.0.0:${ROUTER_PORT:-4000}
+  path: /graphql
 
 health_check:
   listen: 0.0.0.0:8088

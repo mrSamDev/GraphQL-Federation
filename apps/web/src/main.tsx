@@ -9,6 +9,9 @@ const httpLink = createHttpLink({
   uri: import.meta.env.VITE_GRAPHQL_ENDPOINT ?? '/graphql',
 });
 
+  console.log('import.meta.env.VITE_GRAPHQL_ENDPOINT: ', import.meta.env.VITE_GRAPHQL_ENDPOINT);
+
+
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('token');
   return {
