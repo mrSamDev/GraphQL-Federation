@@ -13,6 +13,7 @@ cors:
     - http://localhost:5173
     - https://web.graphql.orb.local
     - http://web.graphql.orb.local
+    - https://movie.mrsamdev.xyz/
   allow_credentials: true
 
 headers:
