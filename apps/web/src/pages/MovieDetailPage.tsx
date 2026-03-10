@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@apollo/client';
 import {
@@ -108,8 +109,19 @@ export function MovieDetailPage() {
   const isAdmin = user?.role === 'ADMIN';
   const canDelete = isOwner || isAdmin;
 
+  const description = movie.description
+    ? movie.description.slice(0, 155)
+    : `${movie.releaseYear ?? ''} · ${movie.genres.join(', ')}`.trim();
+
   return (
     <div className="max-w-[800px]">
+      <Helmet>
+        <title>{movie.title} — MovieDB</title>
+        <meta name="description" content={description} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={`${movie.title} — MovieDB`} />
+        <meta property="og:description" content={description} />
+      </Helmet>
       <Link to="/" className="mb-5 inline-block text-[13px] text-primary">
         ← Movies
       </Link>

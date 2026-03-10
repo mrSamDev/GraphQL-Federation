@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloClient, ApolloProvider, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
 import './app.css';
 
@@ -29,8 +30,10 @@ const client = new ApolloClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ApolloProvider client={client}>
-      <App />
-    </ApolloProvider>
+    <HelmetProvider>
+      <ApolloProvider client={client}>
+        <App />
+      </ApolloProvider>
+    </HelmetProvider>
   </React.StrictMode>,
 );

@@ -1,5 +1,10 @@
 # MovieDB — GraphQL Federation Platform
 
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Bun](https://img.shields.io/badge/runtime-Bun-black)
+![Apollo Federation](https://img.shields.io/badge/Apollo-Federation%20v2-311C87)
+![Groq](https://img.shields.io/badge/AI-Groq%20LLaMA%203-orange)
+
 A full-stack movie discovery and review platform built on **Apollo Federation v2**. Independent GraphQL subgraph services compose into a single unified API, served by an Apollo Router gateway. Includes an AI movie assistant powered by Groq + LangChain.
 
 ---
@@ -203,3 +208,9 @@ JWT_SECRET=...
 - **Logo (header)** — click 5 times quickly for a secret toast
 - **Konami code** — `↑ ↑ ↓ ↓ ← → ← → B A` anywhere on the page
 - **Architecture page** — Matrix Mode toggle in the top-right corner
+
+---
+
+## License
+
+MIT — see [LICENSE](./LICENSE)

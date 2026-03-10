@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
 import { ADD_MOVIE_MUTATION } from '../gql/operations';
@@ -38,6 +39,10 @@ export function AddMoviePage() {
 
   return (
     <div className="max-w-[540px]">
+      <Helmet>
+        <title>Add movie — MovieDB</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <h1 className="mb-6 text-xl font-bold text-text-bright">Add movie</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>

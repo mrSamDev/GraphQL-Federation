@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@apollo/client';
 import { MovieCard } from '../components/MovieCard';
 import { SearchBar } from '../components/SearchBar';
@@ -85,6 +86,13 @@ export function MovieListPage() {
 
   return (
     <div>
+      <Helmet>
+        <title>MovieDB — Discover Movies</title>
+        <meta name="description" content="Browse, search, and review movies. Find trending films and hidden gems." />
+        <meta property="og:title" content="MovieDB — Discover Movies" />
+        <meta property="og:description" content="Browse, search, and review movies. Find trending films and hidden gems." />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <div className="mb-6 flex flex-wrap gap-3">
         <div className="min-w-[200px] flex-1 basis-[240px]">
           <SearchBar value={query} onChange={handleSearch} />

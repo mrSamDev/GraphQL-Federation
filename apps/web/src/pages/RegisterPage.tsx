@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
 import { REGISTER_MUTATION } from '../gql/operations';
@@ -24,6 +25,10 @@ export function RegisterPage() {
 
   return (
     <div className="mx-auto my-12 max-w-[360px]">
+      <Helmet>
+        <title>Create account — MovieDB</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <h1 className="mb-6 text-xl font-bold text-text-bright">Create account</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>

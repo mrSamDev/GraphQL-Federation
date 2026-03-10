@@ -30,7 +30,8 @@
       "Read(//Users/samdev/Desktop/apps/self/projects/security-labs/prompt-injection/**)",
       "mcp__plugin_context-mode_context-mode__execute_file",
       "Bash(agent-browser click @e5)",
-      "Bash(agent-browser click @e3)"
+      "Bash(agent-browser click @e3)",
+      "Bash(bun add:*)"
     ]
   },
   "hooks": {
