@@ -11,32 +11,28 @@ A full-stack movie discovery and review platform built on **Apollo Federation v2
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────┐
-│        React + Vite Frontend  :5173         │
-│             Apollo Client 3                 │
-└────────────────────┬────────────────────────┘
-                     │ GraphQL HTTP
-                     ▼
-┌─────────────────────────────────────────────┐
-│         Apollo Router Gateway  :4000        │
-│        Federation v2 · Query Planning       │
-└──┬──────────┬───────────┬───────────┬───────┘
-   │          │           │           │   Federation Protocol
-   ▼          ▼           ▼           ▼
-┌──────┐ ┌────────┐ ┌─────────┐ ┌────────┐
-│Users │ │ Movies │ │ Reviews │ │ Search │
-│:4001 │ │  :4002 │ │  :4003  │ │  :4004 │
-└──┬───┘ └───┬────┘ └────┬────┘ └───┬────┘
-   │         │           │          │
-[SQLite] [SQLite]    [SQLite]  [SQLite+FTS5]
+```mermaid
+graph TD
+    FE["React + Vite Frontend :5173\nApollo Client 3"]
 
-          ┌──────────────────────────┐
-          │      AI Subgraph  :4005  │
-          │    Groq · LangChain      │
-          └────────────┬─────────────┘
-                       │
-                  [SQLite] (chat history)
+    GW["Apollo Router Gateway :4000\nFederation v2 · Query Planning"]
+
+    FE -->|GraphQL HTTP| GW
+
+    GW -->|Federation Protocol| U["Users :4001"]
+    GW -->|Federation Protocol| M["Movies :4002"]
+    GW -->|Federation Protocol| R["Reviews :4003"]
+    GW -->|Federation Protocol| S["Search :4004"]
+    GW -->|Federation Protocol| AI["AI Subgraph :4005\nGroq · LangChain"]
+
+    U --> DB1[(SQLite)]
+    M --> DB2[(SQLite)]
+    R --> DB3[(SQLite)]
+    S --> DB4[(SQLite + FTS5)]
+    AI --> DB5[(SQLite\nchat history)]
+
+    AI -->|HTTP| M
+    AI -->|HTTP| R
 ```
 
 Each service is an independent Bun process with its own SQLite database. Subgraphs share no code at runtime — only the federation protocol connects them.
