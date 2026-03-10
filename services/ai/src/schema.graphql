@@ -1,0 +1,51 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key"])
+
+type Conversation @key(fields: "id") {
+  id: ID!
+  userId: ID!
+  title: String!
+  messages: [Message!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Message {
+  id: ID!
+  role: MessageRole!
+  content: String!
+  createdAt: String!
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+input SendMessageInput {
+  conversationId: ID
+  content: String!
+}
+
+type RateLimitInfo {
+  used: Int!
+  limit: Int!
+  resetsAt: String!
+}
+
+type AgentResponse {
+  conversation: Conversation!
+  message: Message!
+  rateLimit: RateLimitInfo!
+}
+
+type Query {
+  conversation(id: ID!): Conversation
+  myConversations: [Conversation!]!
+  myRateLimit: RateLimitInfo!
+}
+
+type Mutation {
+  sendMessage(input: SendMessageInput!): AgentResponse!
+  deleteConversation(id: ID!): Boolean!
+}

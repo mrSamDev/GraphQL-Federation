@@ -258,3 +258,66 @@ export const UPDATE_REVIEW_MUTATION = gql`
     }
   }
 `;
+
+export const SEND_MESSAGE_MUTATION = gql`
+  mutation SendMessage($input: SendMessageInput!) {
+    sendMessage(input: $input) {
+      conversation {
+        id
+        title
+      }
+      message {
+        id
+        role
+        content
+        createdAt
+      }
+      rateLimit {
+        used
+        limit
+        resetsAt
+      }
+    }
+  }
+`;
+
+export const MY_RATE_LIMIT_QUERY = gql`
+  query MyRateLimit {
+    myRateLimit {
+      used
+      limit
+      resetsAt
+    }
+  }
+`;
+
+export const DELETE_CONVERSATION_MUTATION = gql`
+  mutation DeleteConversation($id: ID!) {
+    deleteConversation(id: $id)
+  }
+`;
+
+export const CONVERSATION_QUERY = gql`
+  query GetConversation($id: ID!) {
+    conversation(id: $id) {
+      id
+      title
+      messages {
+        id
+        role
+        content
+        createdAt
+      }
+    }
+  }
+`;
+
+export const MY_CONVERSATIONS_QUERY = gql`
+  query MyConversations {
+    myConversations {
+      id
+      title
+      updatedAt
+    }
+  }
+`;

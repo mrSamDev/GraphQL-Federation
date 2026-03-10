@@ -16,3 +16,7 @@ subgraphs:
     routing_url: http://search:4004/graphql
     schema:
       file: ./services/search/src/schema.graphql
+  ai:
+    routing_url: http://ai:4005/graphql
+    schema:
+      file: ./services/ai/src/schema.graphql

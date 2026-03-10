@@ -5,6 +5,8 @@ COPY apps/web/package.json apps/web/package.json
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install
 
 FROM deps AS build
+ARG VITE_GRAPHQL_ENDPOINT
+ENV VITE_GRAPHQL_ENDPOINT=$VITE_GRAPHQL_ENDPOINT
 COPY . .
 RUN bun run --cwd apps/web build
 
