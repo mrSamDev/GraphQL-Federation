@@ -40,6 +40,7 @@ services:
       - "traefik.http.routers.movie-gateway.rule=Host(`api.movie.mrsamdev.xyz`)"
       - "traefik.http.routers.movie-gateway.entrypoints=websecure"
       - "traefik.http.routers.movie-gateway.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.movie-gateway.service=movie-gateway"
       - "traefik.http.services.movie-gateway.loadbalancer.server.port=4000"
 
   users:
@@ -190,6 +191,7 @@ services:
       - "traefik.http.routers.movie-web.rule=Host(`movie.mrsamdev.xyz`)"
       - "traefik.http.routers.movie-web.entrypoints=websecure"
       - "traefik.http.routers.movie-web.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.movie-web.service=movie-web"
       - "traefik.http.services.movie-web.loadbalancer.server.port=80"
 
 volumes:
