@@ -1,4 +1,3 @@
-# Uncodixify
 
 This document exists to teach you how to act as non-Codex as possible when building UI.
 
